@@ -16,13 +16,14 @@ const userSchema = mongoose.Schema({
 const User = module.exports = mongoose.model('User', userSchema);
 
 // Get Users
-module.exports.getUsers = (callback, limit) => {
-	User.find(callback).limit(limit);
+module.exports.getUsers = (callback) => {
+	User.find(callback);
 }
 
 // Get Single User
-module.exports.getUserById = (id, callback) => {
-	User.findById(id, callback);
+module.exports.getUserByName = (name, callback) => {
+	var name = {name:name}
+	User.findOne(name, callback);
 }
 
 // Add User
@@ -30,9 +31,9 @@ module.exports.addUser = (user, callback) => {
 	User.create(user, callback);
 }
 
-// Update user
-module.exports.updateUser = (id, user, options, callback) => {
-	var query = {_id: id};
+// Update User
+module.exports.updateUser = (name, user, options, callback) => {
+	var query = {name: name};
 	var update = {
 		name: user.name,
 		tenant: user.tenant,
@@ -41,7 +42,7 @@ module.exports.updateUser = (id, user, options, callback) => {
 }
 
 // Delete user
-module.exports.removeUser = (id, callback) => {
-	var query = {_id: id};
+module.exports.removeUser = (name, callback) => {
+	var query = {name: name};
 	User.remove(query, callback);
 }
