@@ -1,4 +1,6 @@
 const mongoose = require('mongoose');
+const bcrypt = require('bcryptjs');
+
 
 // User Schema
 const userSchema = mongoose.Schema({
@@ -6,11 +8,18 @@ const userSchema = mongoose.Schema({
 		type: String,
 		required: true
 	},
-	tenant:{
-		type: Number,
+	username: {
+		type: String,
 		required: true
 	},
-	
+	email: {
+		type: String,
+		required: true
+	},
+	password: {
+		type: String,
+		required: true
+	}
 });
 
 const User = module.exports = mongoose.model('User', userSchema);
@@ -21,28 +30,44 @@ module.exports.getUsers = (callback) => {
 }
 
 // Get Single User
-module.exports.getUserByName = (name, callback) => {
-	var name = {name:name}
-	User.findOne(name, callback);
+module.exports.getUserByName = (username, callback) => {
+	var username = {username:username}
+	User.findOne(username, callback);
 }
 
 // Add User
-module.exports.addUser = (user, callback) => {
-	User.create(user, callback);
+module.exports.addUser = (newUser, callback) => {
+	bcrypt.genSalt(10, (err, salt) => {
+		bcrypt.hash(newUser.password, salt, (err, hash) => {
+		  if(err) throw err;
+		  newUser.password = hash;
+		  newUser.save(callback);
+		});
+	});
 }
 
+
 // Update User
-module.exports.updateUser = (name, user, options, callback) => {
-	var query = {name: name};
+module.exports.updateUser = (username, user,callback) => {
+	var query = {username: username};
 	var update = {
 		name: user.name,
-		tenant: user.tenant,
+		tenantNo: user.tenantNo,
+		username:user.username,
+		password:user.password
 	}
-	User.findOneAndUpdate(query, update, options, callback);
+	User.findOneAndUpdate(query, update, callback);
 }
 
 // Delete user
-module.exports.removeUser = (name, callback) => {
-	var query = {name: name};
+module.exports.removeUser = (username, callback) => {
+	var query = {username: username};
 	User.remove(query, callback);
+}
+
+module.exports.comparePassword = function(candidatePassword, hash, callback) {
+	bcrypt.compare(candidatePassword, hash, (err, isMatch) => {
+	  if(err) throw err;
+	  callback(null, isMatch);
+	});
 }

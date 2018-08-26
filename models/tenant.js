@@ -6,8 +6,8 @@ const tenantSchema = mongoose.Schema({
 		type: Number,
 		required: true
 	},
-	NOU:{
-		type: Number,
+	username:{
+		type: String,
 		required:true
 	}
 });
@@ -19,24 +19,41 @@ module.exports.getTenants = (callback, limit) => {
 	Tenant.find(callback).limit(limit);
 }
 
+// Get Single Tenant
+module.exports.getTenantByName = (username, callback) => {
+	var query = {username:username}
+	Tenant.findOne(query, callback);
+}
+
 // Add Tenant
-module.exports.addTenant = (tenant, callback) => {
+module.exports.assignTenant = (tenant, callback) => {
 	Tenant.create(tenant, callback);
 }
 
 // Update Tenant
-module.exports.updateTenant = (no, tenant,callback) => {
-	var query = {tenantNo: no};
+module.exports.updateTenant = (username,tenant,callback) => {
+	var query = {username : username};
 	var update = {
-		NOU: tenant.NOU
+		tenantNo: tenant.tenantNo
 	}
 	Tenant.findOneAndUpdate(query, update,callback);
 }
 
 // Delete Tenant
-module.exports.removeTenany = (no, callback) => {
-	var query = {tenantNo: no};
+module.exports.removeTenantByUsername = (username, callback) => {
+	var query = {username: username};
 	Tenant.remove(query, callback);
 }
 
+// Get Users By Tenent
+module.exports.getUsersByTenantNo = (tenantNo,callback) => {
+	var query = {tenantNo:tenantNo}
+	Tenant.find(query,callback);
+}
+
+module.exports.countUser = (tenantNo,callback) => {
+
+	var query = {tenantNo:tenantNo};
+	Tenant.count(query,callback);
+}
 
