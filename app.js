@@ -8,7 +8,7 @@ var expressValidator = require('express-validator');
 const bcrypt = require('bcryptjs');
 
 
-
+mongoose.Promise = global.Promise;
 mongoose.connect(config.database, { useNewUrlParser: true });
 // On Connection
 mongoose.connection.on('connected', () => {

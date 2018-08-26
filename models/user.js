@@ -48,15 +48,22 @@ module.exports.addUser = (newUser, callback) => {
 
 
 // Update User
-module.exports.updateUser = (username, user,callback) => {
+module.exports.updateUser = (username, user,options,callback) => {
 	var query = {username: username};
-	var update = {
-		name: user.name,
-		tenantNo: user.tenantNo,
-		username:user.username,
-		password:user.password
-	}
-	User.findOneAndUpdate(query, update, callback);
+
+	bcrypt.genSalt(10, (err, salt) => {
+		bcrypt.hash(user.password, salt, (err, hash) => {
+		  if(err) throw err;
+		  user.password = hash;
+		  var update = {
+			name: user.name,
+			email: user.email,
+			username:user.username,
+			password:user.password
+		}
+		User.findOneAndUpdate(query, update,options,callback);
+		});
+	});
 }
 
 // Delete user
@@ -65,6 +72,7 @@ module.exports.removeUser = (username, callback) => {
 	User.remove(query, callback);
 }
 
+// Compare Password
 module.exports.comparePassword = function(candidatePassword, hash, callback) {
 	bcrypt.compare(candidatePassword, hash, (err, isMatch) => {
 	  if(err) throw err;

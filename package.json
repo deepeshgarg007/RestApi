@@ -15,7 +15,8 @@
     "jsonwebtoken": "*",
     "mongoose": "*",
     "passport": "*",
-    "passport-jwt": "*"
+    "passport-jwt": "*",
+    "promise": "^8.0.1"
   },
   "author": "Deepesh",
   "license": "ISC"

@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+mongoose.Promise = global.Promise;
 
 // Tenant Schema
 const tenantSchema = mongoose.Schema({
@@ -31,12 +32,13 @@ module.exports.assignTenant = (tenant, callback) => {
 }
 
 // Update Tenant
-module.exports.updateTenant = (username,tenant,callback) => {
+module.exports.updateTenant = (username,tenant,options,callback) => {
 	var query = {username : username};
 	var update = {
+		username:username,
 		tenantNo: tenant.tenantNo
 	}
-	Tenant.findOneAndUpdate(query, update,callback);
+	Tenant.findOneAndUpdate(query, update, options, callback);
 }
 
 // Delete Tenant
@@ -51,6 +53,7 @@ module.exports.getUsersByTenantNo = (tenantNo,callback) => {
 	Tenant.find(query,callback);
 }
 
+// Count No of users for a tenant
 module.exports.countUser = (tenantNo,callback) => {
 
 	var query = {tenantNo:tenantNo};

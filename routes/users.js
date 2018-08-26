@@ -9,7 +9,7 @@ const User =require('../models/user');
 const Tenant =require('../models/tenant');
 
 
-router.get('/', (req, res) => {
+router.get('/',passport.authenticate('jwt', {session:false}),(req, res) => {
 	User.getUsers((err, users) => {
 		if(err){
 			throw err;
@@ -25,14 +25,14 @@ router.post('/register', (req, res, next) => {
     var username = req.body.username;
     var password = req.body.password;
 
-    var errors = req.validationErrors();
-
     // Validation
 	req.checkBody('name', 'Name is required').notEmpty();
 	req.checkBody('email', 'Email is required').notEmpty();
 	req.checkBody('email', 'Email is not valid').isEmail();
 	req.checkBody('username', 'Username is required').notEmpty();
     req.checkBody('password', 'Password is required').notEmpty();
+
+    var errors = req.validationErrors();
     
     if(errors){
 		res.json({errors:errors});
@@ -115,7 +115,7 @@ router.get('/:username', passport.authenticate('jwt', {session:false}), (req, re
 router.put('/:username', passport.authenticate('jwt', {session:false}), (req, res) => {
 	var username = req.params.username;
 	var user = req.body;
-	User.updateUser(username, user, {}, (err, user) => {
+	User.updateUser(username, user, {  new:true }, (err, user) => {
 		if(err){
 			throw err;
 		}
@@ -130,7 +130,7 @@ router.delete('/:username', passport.authenticate('jwt', {session:false}), (req,
 			throw err;
 		}
     });
-    Tenant.removeTenant(username, (err, tenant) => {
+    Tenant.removeTenantByUsername(username, (err, tenant) => {
 		if(err){
 			throw err;
 		}

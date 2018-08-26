@@ -2,8 +2,8 @@ const express = require('express');
 var router = express.Router();
 const passport = require('passport');
 const User = require('../models/user');
-
 const Tenant =require('../models/tenant');
+var Promise = require('promise');
 
 router.get('/', passport.authenticate('jwt', {session:false}), (req, res) => {
 	Tenant.getTenants((err, tenant) => {
@@ -15,7 +15,7 @@ router.get('/', passport.authenticate('jwt', {session:false}), (req, res) => {
 });
 
 router.get('/:_tenantNo', passport.authenticate('jwt', {session:false}), (req, res) => {
-	Tenant.getUsersByTenantNo((err, tenant) => {
+	Tenant.getUsersByTenantNo(req.params._tenantNo, (err, tenant) => {
 		if(err){
 			throw err;
 		}
@@ -42,61 +42,69 @@ router.post('/', passport.authenticate('jwt', {session:false}), (req, res) => {
 			tenantNo:tenantNo,
 		});
 
-		Tenant.countUser(no,(err,count) =>{
-		if(count < 3)
-		{
-			Tenant.assignTenant(newTenant, (err, tenant) => {
-				if(err){
-					throw err;
+		Tenant.getTenantByName(username, function(err, tenant){
+			if(err) throw err;
+            if(tenant){
+                res.json({success: false, msg: 'Tenant Already Exists in BucKet '+tenant.tenantNo});
+			}
+			else{
+				Tenant.countUser(tenantNo,(err,count) =>{
+				if(count < 20 && tenantNo<5)
+				{
+					Tenant.assignTenant(newTenant, (err, tenant) => {
+						if(err){
+							throw err;
+						}
+						res.json({msg:'Tenant added successfully',tenant});
+					});
 				}
-				res.json({msg:'Tenant added successfully',tenant});
-			});
-		}
-		else{
-			res.send("Tenant bucket "+no+" is full,Please Try Again");
-		}
+				else{
+					if(tenantNo > 5)
+					{
+						res.send("Tenant bucket "+tenantNo+" is not a bucket,Please try bucket less than 5");
+					}
+					else{
+					res.send("Tenant bucket "+tenantNo+" is full,Please try another bucket less than 5");
+					}
+				}
+			 });
+			}
 		});
 	}
 });
 
-router.put('/swap/:username1/:username2',passport.authenticate('jwt', {session:false}), (req, res) => {
-	var username1 = req.params.username1;
-	var username2 = req.params.username2;
-
-	var tenant1;
-	var tenant2;
-	var update_tenant1;
-	var update_tenant2;
+router.put('/swap',passport.authenticate('jwt', {session:false}),(req, res) => {
+	var username1 = req.body.username1;
+	var username2 = req.body.username2;
 	
-	Tenant.getTenantByName(username1,(err,tenant) => {
+	Tenant.getTenantByName(username1,(err,tenant1) => {
 		if(err){
 			throw err;
 		}
-		tenant1 = tenant;
-	});
-
-	Tenant.getTenantByName(username2,(err,tenant) => {
-		if(err){
-			throw err;
+		if(tenant1){
+			Tenant.getTenantByName(username2,(err,tenant2) => {
+				if(err){
+					throw err;
+				}
+				if(tenant2){
+					Tenant.updateTenant(tenant1.username, tenant2, {  new:true }, (err, updated_tenant1) => {
+						if(err){
+							throw err;
+						}
+						if(updated_tenant1){
+							Tenant.updateTenant(tenant2.username, tenant1, {  new:true }, (err, updated_tenant2) => {
+								if(err){
+									throw err;
+								}
+								console.log(updated_tenant1);
+								res.json({msg:'Tenants swapped cuccessfully',updated_tenant1,updated_tenant2});
+							});
+						}
+					});
+				}
+			});
 		}
-		tenant2 = tenant;
 	});
-
-	Tenant.updateTenant(tenant1.username, tenant2, {}, (err, tenant) => {
-		if(err){
-			throw err;
-		}
-		update_tenant1 = tenant;
-	});
-
-	Tenant.updateTenant(tenant2.username, tenant1, {}, (err, tenant) => {
-		if(err){
-			throw err;
-		}
-		update_tenant2 = tenant;
-	});
-
-	res.json({msg:'Tenants swapped cuccessfully',update_tenant1,update_tenant2});
 });
 
 module.exports = router;
